@@ -2,10 +2,13 @@ import * as yup from "yup";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import Spinner from "../components/Spinner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../services/auth.routes";
+import toast from "react-hot-toast";
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -16,26 +19,31 @@ const LoginForm = () => {
       email: yup.string().email("Enter Valid Email").required("Enter Email"),
       password: yup.string().required("Enter Password"),
     }),
-    onSubmit: (values) => {
-      if (values.remember) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            email: values.email,
-            password: values.password,
-          }),
-        );
-      } else {
-        localStorage.removeItem("user");
-      }
-
+    onSubmit: async (values, { resetForm }) => {
       setLoading(true);
 
-      console.log(values);
-
-      setTimeout(() => {
+      const response = await loginUser(values);
+      if (response?.status === "success") {
+        sessionStorage.setItem("token", response?.data);
+        if (values.remember) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              email: values.email,
+              password: values.password,
+            }),
+          );
+        } else {
+          localStorage.removeItem("user");
+        }
+        resetForm();
+        navigate("/chat");
         setLoading(false);
-      }, 1500);
+        toast.success("User Logged in Successfully");
+      } else {
+        setLoading(false);
+        toast.error(response?.message || "Please try again later");
+      }
     },
   });
 
@@ -83,6 +91,7 @@ const LoginForm = () => {
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  autoComplete="email"
                 />
                 {formik.errors.email && (
                   <small className="text-red-500">{formik.errors.email}</small>
@@ -103,6 +112,7 @@ const LoginForm = () => {
                   value={formik.values.password}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  autoComplete="current-password"
                 />
                 {formik.errors.password && (
                   <small className="text-red-500">

@@ -1,6 +1,6 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { ConfigService } from "@nestjs/config";
 import {
   ExceptionFilter,
   Catch,
@@ -8,8 +8,8 @@ import {
   HttpException,
   Logger,
   ValidationPipe,
-} from '@nestjs/common';
-import { Response } from 'express';
+} from "@nestjs/common";
+import { Response } from "express";
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -23,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const message = (res.message as string | string[]) || exception.message;
 
-    const customStatus = (res.status as string) || 'error';
+    const customStatus = (res.status as string) || "error";
 
     const errorResponse = {
       status: customStatus,
@@ -37,12 +37,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT', 5000);
-  const env = configService.get<string>('NODE_ENV');
+  const port = configService.get<number>("PORT", 5000);
+  const env = configService.get<string>("NODE_ENV");
 
   app.useGlobalPipes(new ValidationPipe());
 
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.enableCors({
+    origin: configService.get<string>("CLIENT_URL"),
+    credentials: true,
+  });
 
   try {
     await app.listen(port);

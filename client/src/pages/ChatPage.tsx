@@ -3,6 +3,11 @@ import Sidebar from "../components/Sidebar";
 import MessageBubble from "../components/MessageBubble";
 import ChatInput from "../components/ChatInput";
 import LoadingDots from "../components/LoadingDots";
+import { useNavigate } from "react-router-dom";
+import Login from "./Login";
+import Spinner from "../components/Spinner";
+import { fetchProfile } from "../services/auth.routes";
+import toast from "react-hot-toast";
 
 type Chat = {
   id: number;
@@ -14,10 +19,13 @@ export default function ChatPage() {
   useEffect(() => {
     document.title = "Chat - Smart Chaty";
   }, []);
+  const navigate = useNavigate();
 
   const [active, setActive] = useState(1);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const token = sessionStorage.getItem("token");
+  const [screenLoading, setScreenLoading] = useState(true);
 
   const [chats, setChats] = useState<Chat[]>([
     {
@@ -74,6 +82,38 @@ export default function ChatPage() {
     if (active === id && updated.length) setActive(updated[0].id);
   };
 
+  useEffect(() => {
+    const fetchProfileUser = async () => {
+      setScreenLoading(true);
+      if (token) {
+        const response: any = await fetchProfile(token);
+        if (response?.status === "success") {
+          navigate("/chat");
+          setScreenLoading(false);
+        } else {
+          navigate("/");
+          setScreenLoading(false);
+        }
+      } else {
+        navigate("/");
+        setScreenLoading(false);
+      }
+    };
+    fetchProfileUser();
+  }, [token]);
+
+  const logoutUser = () => {
+    setScreenLoading(true);
+    sessionStorage.removeItem("token");
+    navigate("/");
+    setScreenLoading(false);
+    toast.success("Logged Out Successfully");
+  };
+
+  if (screenLoading) return <Spinner />;
+
+  if (!token) return <Login />;
+
   return (
     <div className="h-screen flex bg-[#f4f6fb] text-[#334155]">
       <Sidebar
@@ -81,7 +121,7 @@ export default function ChatPage() {
         active={active}
         onSelect={setActive}
         onDelete={deleteChat}
-        onLogout={() => location.reload()}
+        onLogout={logoutUser}
       />
 
       <main className="flex-1 flex flex-col">

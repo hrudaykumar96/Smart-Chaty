@@ -3,17 +3,25 @@ import { useFormik } from "formik";
 import { useState } from "react";
 import Spinner from "../components/Spinner";
 import { Link } from "react-router-dom";
+import { signUpUser } from "../services/auth.routes";
+import toast from "react-hot-toast";
 
 const SignUpForm = () => {
   const [loading, setLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
     },
     validationSchema: yup.object({
+      name: yup
+        .string()
+        .min(2, "Minimum 2 characters")
+        .max(100, "Maximum 100 characters")
+        .required("Enter name"),
       email: yup.string().email("Enter valid email").required("Enter email"),
       password: yup
         .string()
@@ -25,14 +33,17 @@ const SignUpForm = () => {
         .oneOf([yup.ref("password")], "Passwords do not match")
         .required("Confirm password"),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values, { resetForm }) => {
       setLoading(true);
-
-      console.log(values);
-
-      setTimeout(() => {
+      const response = await signUpUser(values);
+      if (response?.status === "success") {
+        resetForm();
         setLoading(false);
-      }, 1500);
+        toast.success(response.message);
+      } else {
+        toast.error(response?.message || "Please try again later");
+        setLoading(false);
+      }
     },
   });
 
@@ -59,6 +70,24 @@ const SignUpForm = () => {
           <form className="space-y-5" onSubmit={formik.handleSubmit}>
             <div>
               <label className="mb-2 text-slate-900 font-medium text-sm inline-block">
+                Name<span className="text-red-500">*</span>
+              </label>
+
+              <input
+                type="text"
+                name="name"
+                placeholder="Enter your Name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                className={inputClass(formik.errors.name)}
+              />
+
+              {formik.errors.name && (
+                <small className="text-red-500">{formik.errors.name}</small>
+              )}
+            </div>
+            <div>
+              <label className="mb-2 text-slate-900 font-medium text-sm inline-block">
                 Email<span className="text-red-500">*</span>
               </label>
 
@@ -69,6 +98,7 @@ const SignUpForm = () => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 className={inputClass(formik.errors.email)}
+                autoComplete="email"
               />
 
               {formik.errors.email && (
@@ -88,6 +118,7 @@ const SignUpForm = () => {
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 className={inputClass(formik.errors.password)}
+                autoComplete="new-password"
               />
 
               {formik.errors.password && (
@@ -107,6 +138,7 @@ const SignUpForm = () => {
                 value={formik.values.confirmPassword}
                 onChange={formik.handleChange}
                 className={inputClass(formik.errors.confirmPassword)}
+                autoComplete="new-password"
               />
 
               {formik.errors.confirmPassword && (

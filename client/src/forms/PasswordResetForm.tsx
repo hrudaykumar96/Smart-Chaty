@@ -3,6 +3,8 @@ import { useFormik } from "formik";
 import { useState } from "react";
 import Spinner from "../components/Spinner";
 import { Link } from "react-router-dom";
+import { updatePassword } from "../services/auth.routes";
+import toast from "react-hot-toast";
 
 const PasswordResetForm = () => {
   const [loading, setLoading] = useState(false);
@@ -25,14 +27,17 @@ const PasswordResetForm = () => {
         .oneOf([yup.ref("password")], "Passwords do not match")
         .required("Confirm password"),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values, { resetForm }) => {
       setLoading(true);
-
-      console.log(values);
-
-      setTimeout(() => {
+      const response = await updatePassword(values);
+      if (response?.status === "success") {
+        resetForm();
         setLoading(false);
-      }, 1500);
+        toast.success(response.message);
+      } else {
+        setLoading(false);
+        toast.error(response?.message || "Failed to reset password");
+      }
     },
   });
 
@@ -69,6 +74,7 @@ const PasswordResetForm = () => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 className={inputClass(formik.errors.email)}
+                autoComplete="email"
               />
 
               {formik.errors.email && (
@@ -107,6 +113,7 @@ const PasswordResetForm = () => {
                 value={formik.values.confirmPassword}
                 onChange={formik.handleChange}
                 className={inputClass(formik.errors.confirmPassword)}
+                autoComplete="new-password"
               />
 
               {formik.errors.confirmPassword && (

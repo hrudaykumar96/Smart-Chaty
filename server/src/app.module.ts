@@ -1,8 +1,8 @@
-import { Logger, Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
-import { UserModule } from './user/user.module';
+import { Logger, Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Connection } from "mongoose";
+import { UserModule } from "./user/user.module";
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { UserModule } from './user/user.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI'),
+        uri: config.get<string>("MONGODB_URI"),
         connectionFactory: async (connection: Connection) => {
           await connection.db
             ?.admin()
@@ -20,7 +20,7 @@ import { UserModule } from './user/user.module';
             .then(() => {
               Logger.log(
                 `MongoDB connected successfully in ${
-                  config.get<string>('NODE_ENV') ?? 'development'
+                  config.get<string>("NODE_ENV") ?? "development"
                 } mode`,
               );
             })
