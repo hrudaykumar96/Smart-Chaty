@@ -44,8 +44,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  const clientUrlString = configService.get<string>("CLIENT_URL") || "";
+  const origins = clientUrlString.split(",").map((url) => url.trim());
+
   app.enableCors({
-    origin: configService.get<string>("CLIENT_URL"),
+    origin: origins,
     credentials: true,
   });
 

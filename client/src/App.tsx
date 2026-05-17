@@ -4,6 +4,7 @@ import SignUp from "./pages/SignUp";
 import ResetPassword from "./pages/ResetPassword";
 import ChatPage from "./pages/ChatPage";
 import { Toaster } from "react-hot-toast";
+import StaticChatbotWidget from "./components/StaticChatbotWidget";
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/chat" element={<ChatPage />} />
       </Routes>
+      <StaticChatbotWidget />
     </BrowserRouter>
   );
 };
